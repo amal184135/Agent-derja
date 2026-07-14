@@ -1,0 +1,32 @@
+# Environnements virtuels
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets / config locale
+.env
+.env.*
+!.env.example
+
+# Docker
+*.log
+
+# Poids de modèles (volumineux, montés en volume, pas versionnés)
+models_weights/
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

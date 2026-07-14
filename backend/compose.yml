@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+    image: backend-api:latest
+    env_file:
+      - .env
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

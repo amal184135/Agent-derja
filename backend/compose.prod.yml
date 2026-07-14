@@ -1,0 +1,8 @@
+services:
+  api:
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+
+  mongo:
+    restart: unless-stopped
