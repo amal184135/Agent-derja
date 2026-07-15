@@ -1,11 +1,10 @@
 import { useAuth } from "../hooks/useAuth";
 
 export default function Home() {
-  const { username, logoutUser } = useAuth();
+  const { username } = useAuth();
   return (
-    <div>
+    <div style={{ display: "flex" }}>
       <h1>Bienvenue {username}</h1>
-      <button onClick={logoutUser}>Se déconnecter</button>
     </div>
   );
 }

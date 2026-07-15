@@ -1,0 +1,202 @@
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 260px;
+  min-height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #ffedd5;
+  box-shadow: 0 0 24px rgba(234, 88, 12, 0.06);
+  transition: width 0.3s ease-in-out;
+}
+
+.sidebar--collapsed {
+  width: 76px;
+}
+
+/* Toggle button */
+.sidebar__toggle {
+  position: absolute;
+  top: 36px;
+  right: -12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.sidebar__toggle:hover {
+  transform: scale(1.1);
+}
+
+.sidebar__toggle-icon {
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar__toggle-icon--flipped {
+  transform: rotate(180deg);
+}
+
+/* Brand */
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+}
+
+.sidebar__brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+}
+
+.sidebar__brand-text {
+  overflow: hidden;
+  width: 160px;
+  opacity: 1;
+  white-space: nowrap;
+  transition: width 0.3s ease-in-out, opacity 0.2s ease-in-out;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sidebar--collapsed .sidebar__brand-text {
+  width: 0;
+  opacity: 0;
+}
+
+.sidebar__brand-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ea580c;
+}
+
+.sidebar__brand-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Nav */
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 0 12px;
+}
+
+.sidebar__nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar__nav-item:hover {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.sidebar__nav-item:hover .sidebar__nav-icon {
+  transform: scale(1.1);
+}
+
+.sidebar__nav-item--active {
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.25);
+}
+
+.sidebar__nav-item--active:hover {
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  color: #fff;
+}
+
+.sidebar__nav-icon {
+  display: flex;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.sidebar__nav-label {
+  overflow: hidden;
+  width: 128px;
+  opacity: 1;
+  white-space: nowrap;
+  transition: width 0.3s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.sidebar--collapsed .sidebar__nav-label {
+  width: 0;
+  opacity: 0;
+}
+
+.sidebar__nav-indicator {
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  width: 4px;
+  height: 24px;
+  transform: translateY(-50%);
+  border-radius: 4px 0 0 4px;
+  background: #ea580c;
+}
+
+/* Footer / Logout */
+.sidebar__footer {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid #ffedd5;
+}
+
+.sidebar__logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar__logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.sidebar__logout:hover .sidebar__nav-icon {
+  transform: scale(1.1);
+}
