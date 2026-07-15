@@ -1,0 +1,136 @@
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fdf1e6 0%, #ffffff 55%);
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.home-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.home-icon {
+  width: 84px;
+  height: 84px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #f7941d 0%, #e8590c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(232, 89, 12, 0.28);
+  margin-bottom: 20px;
+}
+
+.home-icon svg {
+  width: 42px;
+  height: 42px;
+}
+
+.home-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #e8590c;
+  margin: 0 0 10px;
+}
+
+.home-subtitle-ar {
+  font-size: 17px;
+  color: #4a4a4a;
+  margin: 0 0 6px;
+  direction: rtl;
+}
+
+.home-subtitle-en {
+  font-size: 15px;
+  color: #8a8a8a;
+  margin: 0 0 32px;
+}
+
+.home-feature {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid #f0e4d8;
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  text-align: left;
+}
+
+.home-feature-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fdeadb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-feature-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.home-feature-text h3 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f1f1f;
+}
+
+.home-feature-text p {
+  margin: 0;
+  font-size: 13.5px;
+  color: #8a8a8a;
+}
+
+.home-btn-primary {
+  width: 100%;
+  padding: 15px;
+  margin-top: 18px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f7941d 0%, #e8590c 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(232, 89, 12, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.home-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(232, 89, 12, 0.38);
+}
+
+.home-btn-secondary {
+  width: 100%;
+  padding: 15px;
+  margin-top: 12px;
+  border: 2px solid #e8590c;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #e8590c;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.home-btn-secondary:hover {
+  background: #fff6ef;
+}

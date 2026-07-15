@@ -1,16 +1,26 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import './Register.css';
+import { useNavigate, Link } from "react-router-dom";
 import { register } from "../services/api";
 
 export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
       await register(username, password);
       navigate("/login");
@@ -19,22 +29,114 @@ export default function Register() {
     }
   };
 
+  const EyeIcon = ({ open }: { open: boolean }) =>
+    open ? (
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
+          stroke="#8a8a8a"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="12" cy="12" r="3" stroke="#8a8a8a" strokeWidth="1.8" />
+      </svg>
+    ) : (
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.24 4.24M9.5 5.4A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a13.6 13.6 0 0 1-3.1 3.9M6.6 6.6C4.3 8.1 2 12 2 12s3.5 7 10 7c1.3 0 2.5-.2 3.6-.6"
+          stroke="#8a8a8a"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Inscription</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <input
-        placeholder="Nom d'utilisateur"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button type="submit">S'inscrire</button>
-    </form>
+    <div className="register-page">
+      <div className="register-card">
+        <div className="register-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="8" width="16" height="12" rx="3" stroke="white" strokeWidth="2" />
+            <path d="M12 8V4" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="12" cy="3" r="1.3" fill="white" />
+            <circle cx="9" cy="14" r="1.4" fill="white" />
+            <circle cx="15" cy="14" r="1.4" fill="white" />
+            <path d="M2 12h2M20 12h2" stroke="white" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <h2 className="register-title">Create account</h2>
+        <p className="register-subtitle">Join Agent Derja and start chatting</p>
+
+        <form onSubmit={handleSubmit} className="register-form">
+          {error && <p className="register-error">{error}</p>}
+
+          <label className="register-label" htmlFor="username">
+            Username
+          </label>
+          <input
+            id="username"
+            className="register-input"
+            placeholder="Choose a username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+
+          <label className="register-label" htmlFor="password">
+            Password
+          </label>
+          <div className="register-input-wrapper">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              className="register-input"
+              placeholder="Create a password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="register-eye-btn"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              <EyeIcon open={showPassword} />
+            </button>
+          </div>
+
+          <label className="register-label" htmlFor="confirmPassword">
+            Confirm password
+          </label>
+          <div className="register-input-wrapper">
+            <input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              className="register-input"
+              placeholder="Re-enter your password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="register-eye-btn"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              <EyeIcon open={showConfirmPassword} />
+            </button>
+          </div>
+
+          <button type="submit" className="register-btn-primary">
+            Sign up
+          </button>
+        </form>
+
+        <p className="register-footer">
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
+      </div>
+    </div>
   );
 }
