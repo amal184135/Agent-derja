@@ -1,9 +1,17 @@
+from fastapi import HTTPException, status
 from passlib.exc import PasswordTruncateError
 
 from app.core.security import hash_password, verify_password
 from app.db.mongodb import users_collection
-from app.exceptions import PasswordTooLongException
 from app.models.user import UserCreate
+
+
+class PasswordTooLongException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password too long (bcrypt limit is 72 bytes). Use a shorter password.",
+        )
 
 
 async def get_user_by_username(username: str):
