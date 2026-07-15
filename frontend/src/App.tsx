@@ -3,8 +3,11 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Chat from "./pages/Chat"; // ta page protégée
 import HomePage from "./pages/HomePage";
+import Layout from "./components/Layout";
+import Chat from "./pages/Chat"; 
+import History  from "./pages/History";
+import Profile  from "./pages/Profile";
 
 export default function App() {
   return (
@@ -15,13 +18,16 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/chat"
             element={
               <PrivateRoute>
-                <Chat />
+                <Layout />
               </PrivateRoute>
             }
-          />
+          >
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
