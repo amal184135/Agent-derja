@@ -16,7 +16,7 @@ export default function Login() {
     try {
       const data = await login(username, password);
       loginUser(data.access_token, username);
-      navigate("/");
+      navigate("/chat");
     } catch (err: any) {
       setError(err.message);
     }

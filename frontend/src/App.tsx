@@ -3,20 +3,22 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Home from "./pages/Home"; // ta page protégée
+import Chat from "./pages/Chat"; // ta page protégée
+import HomePage from "./pages/HomePage";
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/"
+            path="/chat"
             element={
               <PrivateRoute>
-                <Home />
+                <Chat />
               </PrivateRoute>
             }
           />
