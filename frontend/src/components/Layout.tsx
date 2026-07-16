@@ -4,17 +4,26 @@ import Sidebar from "./Sidebar";
 export default function Layout() {
   const navigate = useNavigate();
 
-  const handleNavigate = (key: "chat" | "history" | "profile") => {
-    navigate(`/${key}`);
+  const handleNewChat = () => {
+    // TODO: brancher la logique de réinitialisation du chat (ex: clear messages)
+    navigate("/chat");
   };
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleHistoryClick = () => {
+    navigate("/history");
+  };
+
+  const handleProfileClick = () => {
+    navigate("/profile");
   };
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar onNavigate={handleNavigate} onLogout={handleLogout} />
+      <Sidebar
+        onNewChat={handleNewChat}
+        onHistoryClick={handleHistoryClick}
+        onProfileClick={handleProfileClick}
+      />
       <main style={{ flex: 1, padding: "24px" }}>
         <Outlet />
       </main>
