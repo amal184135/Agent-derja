@@ -1,38 +1,20 @@
 import React, { useState } from "react";
-import { MessageCircle, History, User, LogOut, ChevronLeft, Bot } from "lucide-react";
+import { Plus, History, LogOut, ChevronLeft, Bot } from "lucide-react";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
 
-type NavKey = "chat" | "history" | "profile";
-
-interface NavItem {
-  key: NavKey;
-  label: string;
-  icon: React.ReactNode;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { key: "chat", label: "Chat", icon: <MessageCircle size={20} strokeWidth={2} /> },
-  { key: "history", label: "History", icon: <History size={20} strokeWidth={2} /> },
-  { key: "profile", label: "Profile", icon: <User size={20} strokeWidth={2} /> },
-];
-
 interface SidebarProps {
-  /** Called when a nav item is clicked. Wiring to actual routing comes later. */
-  onNavigate?: (key: NavKey) => void;
-  /** Called when the logout link is clicked. */
-  onLogout?: () => void;
+  /** Called when "New chat" is clicked. Wiring to actual chat reset comes later. */
+  onNewChat?: () => void;
+  /** Called when the History link is clicked. Wiring to actual routing comes later. */
+  onHistoryClick?: () => void;
+  /** Called when the profile avatar/name is clicked. */
+  onProfileClick?: () => void;
 }
 
-export default function Sidebar({ onNavigate, onLogout }: SidebarProps) {
+export default function Sidebar({ onNewChat, onHistoryClick, onProfileClick }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [active, setActive] = useState<NavKey>("chat");
-  const { logoutUser } = useAuth();
-
-  const handleNavClick = (key: NavKey) => {
-    setActive(key);
-    onNavigate?.(key);
-  };
+  const { username, logoutUser } = useAuth();
 
   return (
     <aside className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}>
@@ -51,7 +33,7 @@ export default function Sidebar({ onNavigate, onLogout }: SidebarProps) {
       {/* Brand */}
       <div className="sidebar__brand">
         <div className="sidebar__brand-logo">
-          <Bot size={22} color="#fff" strokeWidth={2} />
+          <Bot size={20} color="#fff" strokeWidth={2} />
         </div>
         <div className="sidebar__brand-text">
           <p className="sidebar__brand-title">Agent Derja</p>
@@ -59,31 +41,39 @@ export default function Sidebar({ onNavigate, onLogout }: SidebarProps) {
         </div>
       </div>
 
-      {/* Nav links */}
+      {/* New chat button */}
+      <button className="sidebar__new-chat" onClick={() => onNewChat?.()}>
+        <Plus size={18} strokeWidth={2.5} />
+        <span className="sidebar__new-chat-label">New chat</span>
+      </button>
+
+      {/* History link */}
       <nav className="sidebar__nav">
-        {NAV_ITEMS.map((item) => {
-          const isActive = active === item.key;
-          return (
-            <button
-              key={item.key}
-              onClick={() => handleNavClick(item.key)}
-              className={`sidebar__nav-item ${isActive ? "sidebar__nav-item--active" : ""}`}
-            >
-              <span className="sidebar__nav-icon">{item.icon}</span>
-              <span className="sidebar__nav-label">{item.label}</span>
-              {isActive && collapsed && <span className="sidebar__nav-indicator" />}
-            </button>
-          );
-        })}
+        <button className="sidebar__nav-item" onClick={() => onHistoryClick?.()}>
+          <span className="sidebar__nav-icon">
+            <History size={20} strokeWidth={2} />
+          </span>
+          <span className="sidebar__nav-label">History</span>
+        </button>
       </nav>
 
-      {/* Logout link, separated at the bottom */}
+      {/* Empty space (future: chat history list) */}
+      <div className="sidebar__spacer" />
+
+      {/* User footer - clickable, navigates to profile */}
       <div className="sidebar__footer">
-        <button className="sidebar__logout" onClick={logoutUser} >
-          <span className="sidebar__nav-icon">
-            <LogOut size={20} strokeWidth={2} />
-          </span>
-          <span className="sidebar__nav-label" >Logout</span>
+        <button className="sidebar__user" onClick={() => onProfileClick?.()}>
+          <div className="sidebar__user-avatar">
+            {username?.charAt(0).toUpperCase() ?? "U"}
+          </div>
+          <span className="sidebar__user-name">{username ?? "Utilisateur"}</span>
+        </button>
+        <button
+          className="sidebar__logout-icon"
+          onClick={logoutUser}
+          aria-label="Se déconnecter"
+        >
+          <LogOut size={18} strokeWidth={2} />
         </button>
       </div>
     </aside>

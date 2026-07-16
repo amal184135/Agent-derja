@@ -30,3 +30,6 @@ models_weights/
 # OS
 .DS_Store
 Thumbs.db
+
+# Dossier contenant les poids des modèles IA
+models_weights/

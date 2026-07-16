@@ -7,12 +7,22 @@ services:
       - .env
     environment:
       MONGO_URL: mongodb://mongo:27017
+
     ports:
       - "8000:8000"
     volumes:
       - ./app:/code/app
+      - ./models_weights:/code/models_weights
+
     depends_on:
       - mongo
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   mongo:
     image: mongo:7
