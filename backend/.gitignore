@@ -16,7 +16,7 @@ __pycache__/
 .env.*
 !.env.example
 
-# Docker
+# Logs
 *.log
 
 # Poids de modèles (volumineux, montés en volume, pas versionnés)

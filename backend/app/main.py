@@ -1,5 +1,9 @@
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -10,6 +14,7 @@ from app.services.tts_service import engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     engine.load()
+    print(f"TTS device: {engine.device}")
     yield
 
 app = FastAPI(lifespan=lifespan)
