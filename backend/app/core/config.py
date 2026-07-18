@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class Settings(BaseSettings):
     mongo_url: str = "mongodb://localhost:27017"
@@ -11,16 +12,25 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
+    # --- TTS settings ---
+    TTS_MODEL_DIR: Path = BASE_DIR / "models_weights" / "xtts_v2"
+    TTS_CONFIG_PATH: Path | None = None
+    TTS_REFERENCE_WAV: Path | None = None
+    TTS_DEFAULT_LANGUAGE: str = "ar"
+    TTS_DEVICE: str = "auto"  # "auto" | "cuda" | "cpu"
+
+    # --- STT settings ---
+    STT_BASE_MODEL: str = "openai/whisper-small"
+    STT_ADAPTER_PATH: str = "models_weights/whisper_lora"
+    STT_DEFAULT_LANGUAGE: str = "arabic"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()
 
-# --- TTS settings ---
-BASE_DIR = Path(__file__).resolve().parent.parent.parent  # racine du backend (app/core/config.py -> backend/)
-
-TTS_MODEL_DIR = Path(os.getenv("TTS_MODEL_DIR", str(BASE_DIR / "models_weights" / "xtts_v2")))
-TTS_CONFIG_PATH = TTS_MODEL_DIR / "config.json"
-TTS_REFERENCE_WAV = Path(os.getenv("TTS_REFERENCE_WAV", str(TTS_MODEL_DIR / "reference.wav")))
-TTS_DEFAULT_LANGUAGE = os.getenv("TTS_DEFAULT_LANGUAGE", "ar")
-TTS_DEVICE = os.getenv("TTS_DEVICE", "auto")  # "auto" | "cuda" | "cpu"
+# derive paths that depend on TTS_MODEL_DIR after instantiation
+if settings.TTS_CONFIG_PATH is None:
+    settings.TTS_CONFIG_PATH = settings.TTS_MODEL_DIR / "config.json"
+if settings.TTS_REFERENCE_WAV is None:
+    settings.TTS_REFERENCE_WAV = settings.TTS_MODEL_DIR / "reference.wav"
