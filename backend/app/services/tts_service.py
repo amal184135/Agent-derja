@@ -4,9 +4,9 @@ import threading
 import soundfile as sf
 import torch
 from TTS.tts.configs.xtts_config import XttsConfig
+from app.core.config import settings
 from TTS.tts.models.xtts import Xtts
 
-from app.core import config
 
 
 class TTSEngine:
@@ -27,12 +27,12 @@ class TTSEngine:
                 return
 
             xtts_config = XttsConfig()
-            xtts_config.load_json(str(config.TTS_CONFIG_PATH))
+            xtts_config.load_json(str(settings.TTS_CONFIG_PATH))
 
             model = Xtts.init_from_config(xtts_config)
-            model.load_checkpoint(xtts_config, checkpoint_dir=str(config.TTS_MODEL_DIR), eval=True)
+            model.load_checkpoint(xtts_config, checkpoint_dir=str(settings.TTS_MODEL_DIR), eval=True)
 
-            device = config.TTS_DEVICE
+            device = settings.TTS_DEVICE
             if device == "auto":
                 device = "cuda" if torch.cuda.is_available() else "cpu"
             model.to(device)
@@ -56,7 +56,7 @@ class TTSEngine:
         outputs = self._model.synthesize(
             text,
             self._config,
-            speaker_wav=str(config.TTS_REFERENCE_WAV),
+            speaker_wav=str(settings.TTS_REFERENCE_WAV),
             language=language,
             gpt_cond_len=self._config.gpt_cond_len,
             gpt_cond_chunk_len=self._config.gpt_cond_chunk_len,

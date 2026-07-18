@@ -34,3 +34,5 @@ transformers==4.57.6
 torch==2.5.1
 torchaudio==2.5.1
 
+peft
+accelerate
