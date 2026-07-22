@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Test Pipeline Vocal</title>
+<style>
+  body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; }
+  h1 { font-size: 1.3rem; }
+  button { padding: 10px 18px; font-size: 1rem; margin-right: 10px; cursor: pointer; }
+  #recordBtn.recording { background: #e33; color: white; }
+  .row { margin: 16px 0; }
+  label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.9rem; }
+  input[type="text"] { width: 100%; padding: 6px; box-sizing: border-box; }
+  #status { color: #666; font-size: 0.9rem; min-height: 1.2em; }
+  .box { background: #f4f4f4; padding: 10px 14px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap; direction: rtl; text-align: right; font-size: 1.1rem; }
+  audio { width: 100%; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Test du pipeline vocal (STT → LLM → TTS)</h1>
+
+<div class="row">
+  <label>Session ID (laisser vide pour en générer une nouvelle)</label>
+  <input type="text" id="sessionId" placeholder="ex: test-1" />
+</div>
+
+<div class="row">
+  <label>Langue</label>
+  <input type="text" id="language" value="arabic" />
+</div>
+
+<div class="row">
+  <button id="recordBtn">🎙️ Enregistrer</button>
+  <button id="sendBtn" disabled>📤 Envoyer</button>
+  <label style="display:inline-block; margin-left:10px;">
+    ou choisir un fichier :
+    <input type="file" id="fileInput" accept="audio/*" />
+  </label>
+</div>
+
+<div id="status"></div>
+
+<audio id="recordedPreview" controls style="display:none;"></audio>
+
+<h3>Texte transcrit (STT)</h3>
+<div class="box" id="userText">—</div>
+
+<h3>Réponse du LLM</h3>
+<div class="box" id="replyText">—</div>
+
+<h3>Réponse audio (TTS)</h3>
+<audio id="responseAudio" controls></audio>
+
+<script>
+let mediaRecorder;
+let recordedChunks = [];
+let recordedBlob = null;
+
+const recordBtn = document.getElementById("recordBtn");
+const sendBtn = document.getElementById("sendBtn");
+const fileInput = document.getElementById("fileInput");
+const statusEl = document.getElementById("status");
+const recordedPreview = document.getElementById("recordedPreview");
+
+recordBtn.addEventListener("click", async () => {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    recordBtn.textContent = "🎙️ Enregistrer";
+    recordBtn.classList.remove("recording");
+    return;
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  recordedChunks = [];
+  mediaRecorder = new MediaRecorder(stream);
+
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data.size > 0) recordedChunks.push(e.data);
+  };
+
+  mediaRecorder.onstop = () => {
+    recordedBlob = new Blob(recordedChunks, { type: "audio/webm" });
+    recordedPreview.src = URL.createObjectURL(recordedBlob);
+    recordedPreview.style.display = "block";
+    sendBtn.disabled = false;
+    statusEl.textContent = "Enregistrement prêt à être envoyé.";
+    stream.getTracks().forEach((t) => t.stop());
+  };
+
+  mediaRecorder.start();
+  recordBtn.textContent = "⏹ Arrêter";
+  recordBtn.classList.add("recording");
+  statusEl.textContent = "Enregistrement en cours...";
+});
+
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length > 0) {
+    recordedBlob = fileInput.files[0];
+    recordedPreview.src = URL.createObjectURL(recordedBlob);
+    recordedPreview.style.display = "block";
+    sendBtn.disabled = false;
+    statusEl.textContent = "Fichier prêt à être envoyé.";
+  }
+});
+
+sendBtn.addEventListener("click", async () => {
+  if (!recordedBlob) return;
+
+  statusEl.textContent = "Envoi en cours... (STT → LLM → TTS)";
+  sendBtn.disabled = true;
+
+  const formData = new FormData();
+  const filename = recordedBlob.type.includes("webm") ? "audio.webm" : "audio.wav";
+  formData.append("file", recordedBlob, filename);
+
+  const sessionId = document.getElementById("sessionId").value.trim();
+  if (sessionId) formData.append("session_id", sessionId);
+
+  const language = document.getElementById("language").value.trim() || "arabic";
+  formData.append("language", language);
+
+  try {
+    const res = await fetch("/voice/chat", { method: "POST", body: formData });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      statusEl.textContent = "Erreur: " + (err.detail || res.status);
+      sendBtn.disabled = false;
+      return;
+    }
+
+    const userText = decodeURIComponent(res.headers.get("x-user-text") || "");
+    const replyText = decodeURIComponent(res.headers.get("x-response-text") || "");
+    const returnedSessionId = res.headers.get("x-session-id") || "";
+
+    document.getElementById("userText").textContent = userText || "—";
+    document.getElementById("replyText").textContent = replyText || "—";
+    document.getElementById("sessionId").value = returnedSessionId;
+
+    const audioBlob = await res.blob();
+    const audioEl = document.getElementById("responseAudio");
+    audioEl.src = URL.createObjectURL(audioBlob);
+    audioEl.play();
+
+    statusEl.textContent = "Terminé.";
+  } catch (e) {
+    statusEl.textContent = "Erreur réseau: " + e.message;
+  }
+
+  sendBtn.disabled = false;
+});
+</script>
+
+</body>
+</html>

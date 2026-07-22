@@ -1,104 +1,34 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import "./Chat.css";
 import { useAuth } from "../hooks/useAuth";
+import { useChat } from "../hooks/useChat";
 import { removeArabicDiacritics } from "../utils/arabic";
-
-type Message = {
-  id: number;
-  sender: "user" | "bot";
-  text: string;
-  timestamp: string;
-};
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-const formatTime = (date: Date) =>
-  date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
 export default function Chat() {
   const { username } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: "bot",
-      text: "أهلا بيك! أنا مساعدك الذكي🤖 نحكي معاك بالدارجة التونسية، فاش نجم نعاونك اليوم؟",
-      timestamp: formatTime(new Date()),
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const {
+    messages,
+    input,
+    setInput,
+    isSending,
+    isRecording,
+    isTranscribing,
+    handleSend,
+    handleSendClick,   // <-- nouveau
+    handleMicClick,
+  } = useChat();
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isSending) return;
-
-    const userMessage: Message = {
-      id: Date.now(),
-      sender: "user",
-      text: input,
-      timestamp: formatTime(new Date()),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsSending(true);
-
-    try {
-      const res = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage.text,
-          session_id: sessionId,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.detail || `Erreur ${res.status}`);
-      }
-
-      const data: { reply: string; session_id: string } = await res.json();
-
-      setSessionId(data.session_id);
-
-      const botMessage: Message = {
-        id: Date.now() + 1,
-        sender: "bot",
-        text: data.reply,
-        timestamp: formatTime(new Date()),
-      };
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (err) {
-      const errorMessage: Message = {
-        id: Date.now() + 1,
-        sender: "bot",
-        text: "معذرة، صار مشكل في الاتصال بالسيرفر. عاود جرب.",
-        timestamp: formatTime(new Date()),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-      console.error("Chat error:", err);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
-
-  const handleToggleRecording = () => {
-    setIsRecording((prev) => !prev);
-    // TODO: start/stop real audio recording (MediaRecorder / Web Speech API)
   };
 
   return (
@@ -128,16 +58,14 @@ export default function Chat() {
             )}
             <div className="chat-bubble-content">
               <div
-                className={`chat-bubble ${
-                  msg.sender === "user" ? "chat-bubble-user" : "chat-bubble-bot"
-                }`}
+                className={`chat-bubble ${msg.sender === "user" ? "chat-bubble-user" : "chat-bubble-bot"
+                  }`}
               >
                 {msg.sender === "bot" ? removeArabicDiacritics(msg.text) : msg.text}
               </div>
               <span
-                className={`chat-timestamp ${
-                  msg.sender === "user" ? "chat-timestamp-user" : "chat-timestamp-bot"
-                }`}
+                className={`chat-timestamp ${msg.sender === "user" ? "chat-timestamp-user" : "chat-timestamp-bot"
+                  }`}
               >
                 {msg.timestamp}
               </span>
@@ -168,66 +96,60 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {isRecording && (
-        <div className="chat-voice-indicator">
-          <div className="chat-voice-bars">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <span className="chat-voice-label">Listening...</span>
-        </div>
-      )}
-
       <div className="chat-input-bar">
-        <textarea
-          className="chat-input"
-          placeholder="Type your message in Derja..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          disabled={isSending}
-        />
+        {isRecording ? (
+          <div className="chat-input-waveform">
+            <div className="chat-waveform-bars">
+              {Array.from({ length: 28 }).map((_, i) => (
+                <span key={i} style={{ animationDelay: `${(i % 7) * 0.08}s` }} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <textarea
+            className="chat-input"
+            placeholder={isTranscribing ? "Transcription en cours..." : "Type your message in Derja..."}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            disabled={isSending || isTranscribing}
+          />
+        )}
 
         <button
-          className={`chat-mic-btn ${isRecording ? "chat-mic-btn-active" : ""}`}
-          onClick={handleToggleRecording}
-          aria-label={isRecording ? "Stop recording" : "Start voice message"}
+          className={`chat-mic-btn ${isRecording ? "chat-mic-btn-recording" : ""} ${(isSending || isTranscribing) && !isRecording ? "chat-mic-btn-interrupt" : ""
+            }`}
+          onClick={handleMicClick}
+          aria-label={
+            isRecording ? "Stop recording" : isSending || isTranscribing ? "Interrupt" : "Start voice message"
+          }
           type="button"
         >
-          {isRecording && <span className="chat-mic-pulse"></span>}
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          {isRecording || isTranscribing || isSending ? (
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
+              <path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
         </button>
 
         <button
           className="chat-send-btn"
-          onClick={handleSend}
+          onClick={handleSendClick}
           aria-label="Send message"
-          disabled={isSending}
+          disabled={isSending || isTranscribing || (!isRecording && !input.trim())}
         >
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
+
     </main>
   );
 }
