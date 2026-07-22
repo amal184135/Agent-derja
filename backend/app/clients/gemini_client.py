@@ -68,3 +68,14 @@ def send_message(session_id: str, message: str) -> str:
     chat = get_or_create_chat(session_id)
     response = chat.send_message(message)
     return response.text
+
+
+def send_message_stream(session_id: str, message: str):
+    """
+    Meme chat/historique/system_instruction que send_message, mais renvoie
+    le texte au fur et a mesure qu'il est genere par Gemini (generateur).
+    """
+    chat = get_or_create_chat(session_id)
+    for chunk in chat.send_message_stream(message):
+        if chunk.text:
+            yield chunk.text

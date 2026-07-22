@@ -8,7 +8,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-from app.routers import auth,chat, tts, stt
+
+
+from app.routers import auth,chat, tts, stt, voice
 from app.services.tts_service import engine as tts_engine
 from app.services.stt_service import engine as stt_engine
 
@@ -27,18 +29,21 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Session-Id", "X-User-Text", "X-Response-Text"],
 )
 
 app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(tts.router)
 app.include_router(stt.router)
+app.include_router(voice.router)
 
 @app.get("/")
 def root():

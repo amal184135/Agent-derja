@@ -132,6 +132,47 @@
   animation-delay: 0.4s;
 }
 
+/* chat wave */
+.chat-input-waveform {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 16px;
+  border: 1.5px solid #f0e4d8;
+  border-radius: 14px;
+  background: #fffaf5;
+  overflow: hidden;
+}
+
+.chat-waveform-bars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  height: 20px;
+}
+
+.chat-waveform-bars span {
+  flex: 1;
+  min-width: 2px;
+  height: 20%;
+  border-radius: 2px;
+  background: #e8590c;
+  animation: waveform-pulse 1s ease-in-out infinite;
+}
+
+@keyframes waveform-pulse {
+  0%, 100% { height: 20%; opacity: 0.5; }
+  50% { height: 90%; opacity: 1; }
+}
+
+.chat-mic-btn-recording {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #fff;
+}
+
 @keyframes typing-bounce {
   0%, 60%, 100% {
     transform: translateY(0);
@@ -297,6 +338,11 @@
 
 .chat-send-btn:hover {
   transform: translateY(-1px);
+}
+
+.chat-mic-btn-interrupt {
+  background-color: #dc2626;
+  color: white;
 }
 
 @media (max-width: 768px) {
