@@ -1,24 +1,43 @@
 import React, { useState } from "react";
-import { Plus, History, LogOut, ChevronLeft, Bot } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Plus, History, LogOut, ChevronLeft, Bot, Trash2 } from "lucide-react";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
+import { useConversations } from "../hooks/useConversations";
+import ConfirmModal from "./confirmModal/ConfirmModal";
 
 interface SidebarProps {
-  /** Called when "New chat" is clicked. Wiring to actual chat reset comes later. */
   onNewChat?: () => void;
-  /** Called when the History link is clicked. Wiring to actual routing comes later. */
-  onHistoryClick?: () => void;
-  /** Called when the profile avatar/name is clicked. */
   onProfileClick?: () => void;
 }
 
-export default function Sidebar({ onNewChat, onHistoryClick, onProfileClick }: SidebarProps) {
+export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const { username, logoutUser } = useAuth();
+  const { conversations, remove } = useConversations();
+  const navigate = useNavigate();
+  const { sessionId: activeSessionId } = useParams();
+
+  const handleNewChat = () => {
+    onNewChat?.();
+    navigate("/chat");
+  };
+
+  const handleSelectConversation = (sessionId: string) => {
+    navigate(`/chat/${sessionId}`);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
+    const wasActive = pendingDelete === activeSessionId;
+    await remove(pendingDelete);
+    setPendingDelete(null);
+    if (wasActive) navigate("/chat");
+  };
 
   return (
     <aside className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}>
-      {/* Toggle button */}
       <button
         className="sidebar__toggle"
         onClick={() => setCollapsed((c) => !c)}
@@ -30,7 +49,6 @@ export default function Sidebar({ onNewChat, onHistoryClick, onProfileClick }: S
         />
       </button>
 
-      {/* Brand */}
       <div className="sidebar__brand">
         <div className="sidebar__brand-logo">
           <Bot size={20} color="#fff" strokeWidth={2} />
@@ -41,26 +59,47 @@ export default function Sidebar({ onNewChat, onHistoryClick, onProfileClick }: S
         </div>
       </div>
 
-      {/* New chat button */}
-      <button className="sidebar__new-chat" onClick={() => onNewChat?.()}>
+      <button className="sidebar__new-chat" onClick={handleNewChat}>
         <Plus size={18} strokeWidth={2.5} />
         <span className="sidebar__new-chat-label">New chat</span>
       </button>
 
-      {/* History link */}
       <nav className="sidebar__nav">
-        <button className="sidebar__nav-item" onClick={() => onHistoryClick?.()}>
+        <div className="sidebar__nav-item sidebar__nav-item--static">
           <span className="sidebar__nav-icon">
             <History size={20} strokeWidth={2} />
           </span>
-          <span className="sidebar__nav-label">History</span>
-        </button>
+          <span className="sidebar__nav-label">Historique</span>
+        </div>
       </nav>
 
-      {/* Empty space (future: chat history list) */}
+      {/* Liste des conversations */}
+      <div className="sidebar__history">
+        {conversations.map((conv) => (
+          <div
+            key={conv.session_id}
+            className={`sidebar__history-item ${
+              conv.session_id === activeSessionId ? "sidebar__history-item--active" : ""
+            }`}
+            onClick={() => handleSelectConversation(conv.session_id)}
+          >
+            <span className="sidebar__history-title">{conv.title}</span>
+            <button
+              className="sidebar__history-delete"
+              aria-label="Supprimer la conversation"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPendingDelete(conv.session_id);
+              }}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
+
       <div className="sidebar__spacer" />
 
-      {/* User footer - clickable, navigates to profile */}
       <div className="sidebar__footer">
         <button className="sidebar__user" onClick={() => onProfileClick?.()}>
           <div className="sidebar__user-avatar">
@@ -68,14 +107,17 @@ export default function Sidebar({ onNewChat, onHistoryClick, onProfileClick }: S
           </div>
           <span className="sidebar__user-name">{username ?? "Utilisateur"}</span>
         </button>
-        <button
-          className="sidebar__logout-icon"
-          onClick={logoutUser}
-          aria-label="Se déconnecter"
-        >
+        <button className="sidebar__logout-icon" onClick={logoutUser} aria-label="Se déconnecter">
           <LogOut size={18} strokeWidth={2} />
         </button>
       </div>
+
+      <ConfirmModal
+        show={pendingDelete !== null}
+        message="Delete this conversation? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </aside>
   );
 }

@@ -1,4 +1,7 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "./useAuth";
+import { getConversation } from "../services/api";
 
 export type Message = {
     id: number;
@@ -20,14 +23,18 @@ const WELCOME_MESSAGE: Message = {
 };
 
 export function useChat() {
+    const { token } = useAuth();
+    const { sessionId: routeSessionId } = useParams<{ sessionId: string }>();
+    const navigate = useNavigate();
+
     const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
     const [input, setInput] = useState("");
     const [isRecording, setIsRecording] = useState(false);
     const [isSending, setIsSending] = useState(false);
-    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [sessionId, setSessionId] = useState<string | null>(routeSessionId ?? null);
     const [isTranscribing, setIsTranscribing] = useState(false);
-    const abortControllerRef = useRef<AbortController | null>(null);
 
+    const abortControllerRef = useRef<AbortController | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
@@ -39,6 +46,33 @@ export function useChat() {
     // Si true, dès que la transcription arrive, elle est envoyée automatiquement
     // (cas: l'utilisateur clique sur "envoyer" pendant l'enregistrement, sans passer par stop)
     const autoSendRef = useRef(false);
+
+    useEffect(() => {
+        if (!token) return;
+
+        if (!routeSessionId) {
+            setSessionId(null);
+            setMessages([WELCOME_MESSAGE]);
+            return;
+        }
+
+        setSessionId(routeSessionId);
+        getConversation(token, routeSessionId)
+            .then((conv) => {
+                setMessages(
+                    conv.messages.map((m, idx) => ({
+                        id: idx,
+                        sender: m.sender,
+                        text: m.text,
+                        timestamp: formatTime(new Date(m.timestamp)),
+                    }))
+                );
+            })
+            .catch((err) => {
+                console.error("Erreur chargement conversation:", err);
+                navigate("/chat");
+            });
+    }, [routeSessionId, token]);
 
     const addMessage = (sender: Message["sender"], text: string) => {
         setMessages((prev) => [
@@ -62,10 +96,15 @@ export function useChat() {
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
+        const isNewConversation = !sessionId;
+
         try {
             const res = await fetch(`${API_URL}/chat`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({ message, session_id: sessionId }),
                 signal: controller.signal,
             });
@@ -77,6 +116,11 @@ export function useChat() {
 
             const data: { reply: string; session_id: string } = await res.json();
             setSessionId(data.session_id);
+
+             if (isNewConversation) {
+                navigate(`/chat/${data.session_id}`, { replace: true });
+            }
+            
             addMessage("bot", data.reply);
         } catch (err) {
             if ((err as Error).name === "AbortError") {

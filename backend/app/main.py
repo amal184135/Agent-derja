@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 
-from app.routers import auth,chat, tts, stt, voice
+from app.routers import auth,chat, tts, stt, voice, conversation
 from app.services.tts_service import engine as tts_engine
 from app.services.stt_service import engine as stt_engine
 
@@ -44,7 +44,8 @@ app.include_router(chat.router)
 app.include_router(tts.router)
 app.include_router(stt.router)
 app.include_router(voice.router)
+app.include_router(conversation.router)
 
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {"status": "ok"} 

@@ -5,9 +5,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import HomePage from "./pages/HomePage";
 import Layout from "./components/Layout";
-import Chat from "./pages/Chat"; 
-import History  from "./pages/History";
-import Profile  from "./pages/Profile";
+import Chat from "./pages/Chat";
+import History from "./pages/History";
+import Profile from "./pages/Profile";
 
 export default function App() {
   return (
@@ -25,6 +25,7 @@ export default function App() {
             }
           >
             <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:sessionId" element={<Chat />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
