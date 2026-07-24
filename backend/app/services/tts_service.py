@@ -41,6 +41,14 @@ class TTSEngine:
             self._config = xtts_config
             self._device = device
 
+            # Calcule le conditioning du locuteur UNE SEULE FOIS ici,
+            # au lieu de le refaire a chaque appel de synthesize().
+            self._gpt_cond_latent, self._speaker_embedding = model.get_conditioning_latents(
+                audio_path=[str(settings.TTS_REFERENCE_WAV)],
+                gpt_cond_len=xtts_config.gpt_cond_len,
+                gpt_cond_chunk_len=xtts_config.gpt_cond_chunk_len,
+            )
+
     @property
     def device(self) -> str:
         return self._device or "not-loaded"
@@ -53,13 +61,11 @@ class TTSEngine:
         if self._model is None:
             raise RuntimeError("Le modele TTS n'est pas encore charge")
 
-        outputs = self._model.synthesize(
+        outputs = self._model.inference(
             text,
-            self._config,
-            speaker_wav=str(settings.TTS_REFERENCE_WAV),
-            language=language,
-            gpt_cond_len=self._config.gpt_cond_len,
-            gpt_cond_chunk_len=self._config.gpt_cond_chunk_len,
+            language,
+            self._gpt_cond_latent,
+            self._speaker_embedding,
         )
 
         wav = outputs["wav"]

@@ -3,6 +3,7 @@ import logging
 import re
 import threading
 import uuid
+import time
 from urllib.parse import quote
 from jose import JWTError, jwt
 
@@ -79,7 +80,9 @@ async def _stream_reply_to_client(websocket: WebSocket, session_id: str, user_te
         try:
             token_stream = chat_service.stream_chat_message(session_id, user_text)
             for sentence in _split_into_sentences(token_stream):
+                t0 = time.time()
                 audio_bytes = tts_engine.synthesize(sentence, tts_language)
+                logger.info("[TTS] %.2fs pour phrase=%r", time.time() - t0, sentence)
                 asyncio.run_coroutine_threadsafe(queue.put(("sentence", sentence, audio_bytes)), loop)
         except Exception as exc:  # noqa: BLE001
             asyncio.run_coroutine_threadsafe(queue.put(("error", str(exc), None)), loop)
