@@ -4,13 +4,15 @@ import re
 import threading
 import uuid
 from urllib.parse import quote
+from jose import JWTError, jwt
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
 
 from app.services.stt_service import engine as stt_engine
 from app.services.tts_service import engine as tts_engine
-from app.services import chat_service
+from app.core.config import settings
+from app.services import chat_service, conversation_service
 
 logger = logging.getLogger("voice_pipeline")
 
@@ -101,7 +103,15 @@ async def _stream_reply_to_client(websocket: WebSocket, session_id: str, user_te
 
     return "".join(reply_parts)
 
-
+def _get_username_from_token(token: str | None) -> str | None:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        return payload.get("sub")
+    except JWTError:
+        return None
+    
 @router.websocket("/ws")
 async def voice_chat_ws(websocket: WebSocket):
     """
@@ -109,9 +119,16 @@ async def voice_chat_ws(websocket: WebSocket):
     mode=full (défaut) : STT -> LLM -> TTS, streaming phrase par phrase.
     mode=transcribe    : STT uniquement, renvoie {"type": "user_text", ...} et s'arrête là.
     """
+    token = websocket.query_params.get("token")
+    username = _get_username_from_token(token)
+
+    if username is None:
+        await websocket.close(code=4401)
+        return
+    
     await websocket.accept()
 
-    session_id = websocket.query_params.get("session_id") or str(uuid.uuid4())
+    session_id = websocket.query_params.get("session_id") or None
     language = websocket.query_params.get("language", "arabic")
     mode = websocket.query_params.get("mode", "full")
     tts_language = STT_TO_TTS_LANGUAGE.get(language, "ar")
@@ -131,11 +148,21 @@ async def voice_chat_ws(websocket: WebSocket):
                 continue
 
             logger.info("[STT] session=%s texte=%s", session_id, user_text)
-            await websocket.send_json({"type": "user_text", "text": user_text, "session_id": session_id})
 
             # --- Court-circuit : mode transcription seule, on s'arrête ici ---
             if mode == "transcribe":
+                await websocket.send_json({"type": "user_text", "text": user_text, "session_id": session_id or ""})
                 continue
+
+            # --- Mode full : la conversation est réellement créée/alimentée ici ---
+            if session_id is None:
+                session_id = await conversation_service.create_conversation(username, user_text)
+            else:
+                conversation = await conversation_service.get_conversation(session_id, username)
+                if conversation is None:
+                    session_id = await conversation_service.create_conversation(username, user_text)
+
+            await websocket.send_json({"type": "user_text", "text": user_text, "session_id": session_id})
 
             if not tts_engine.is_ready:
                 await websocket.send_json({"type": "error", "stage": "tts", "detail": "modele en cours de chargement"})
@@ -143,6 +170,8 @@ async def voice_chat_ws(websocket: WebSocket):
 
             full_reply = await _stream_reply_to_client(websocket, session_id, user_text, tts_language)
             logger.info("[LLM] session=%s reponse=%s", session_id, full_reply)
+
+            await conversation_service.append_messages(session_id, username, user_text, full_reply)
 
             await websocket.send_json({"type": "done", "session_id": session_id, "full_reply": full_reply})
 

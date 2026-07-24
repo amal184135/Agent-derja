@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import { getConversation } from "../services/api";
+import { useConversationsContext } from "../context/ConversationsContext";
 
 export type Message = {
     id: number;
@@ -24,6 +25,7 @@ const WELCOME_MESSAGE: Message = {
 
 export function useChat() {
     const { token } = useAuth();
+    const { refresh } = useConversationsContext();
     const { sessionId: routeSessionId } = useParams<{ sessionId: string }>();
     const navigate = useNavigate();
 
@@ -117,11 +119,12 @@ export function useChat() {
             const data: { reply: string; session_id: string } = await res.json();
             setSessionId(data.session_id);
 
-             if (isNewConversation) {
+            if (isNewConversation) {
                 navigate(`/chat/${data.session_id}`, { replace: true });
             }
-            
+
             addMessage("bot", data.reply);
+            refresh();
         } catch (err) {
             if ((err as Error).name === "AbortError") {
                 // annulé volontairement par l'utilisateur, pas d'erreur affichée
@@ -165,7 +168,7 @@ export function useChat() {
         audioQueueRef.current = [];
         isPlayingRef.current = false;
 
-        const wsUrl = `${API_URL.replace(/^http/, "ws")}/voice/ws?session_id=${sessionId ?? ""}&language=arabic&mode=${mode}`;
+        const wsUrl = `${API_URL.replace(/^http/, "ws")}/voice/ws?session_id=${sessionId ?? ""}&language=arabic&mode=${mode}&token=${encodeURIComponent(token ?? "")}`;
         const ws = new WebSocket(wsUrl);
         ws.binaryType = "arraybuffer";
         wsRef.current = ws;
@@ -201,6 +204,7 @@ export function useChat() {
                     setIsSending(false);
                     wsRef.current = null;
                     ws.close();
+                    refresh();
                 }
 
                 if (data.type === "error") {
