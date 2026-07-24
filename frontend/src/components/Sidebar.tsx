@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Plus, History, LogOut, ChevronLeft, Bot, Trash2 } from "lucide-react";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
-import { useConversations } from "../hooks/useConversations";
+import { useConversationsContext } from "../context/ConversationsContext";
 import ConfirmModal from "./confirmModal/ConfirmModal";
 
 interface SidebarProps {
@@ -15,7 +15,7 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const { username, logoutUser } = useAuth();
-  const { conversations, remove } = useConversations();
+  const { conversations, remove } = useConversationsContext();
   const navigate = useNavigate();
   const { sessionId: activeSessionId } = useParams();
 
@@ -78,9 +78,8 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
         {conversations.map((conv) => (
           <div
             key={conv.session_id}
-            className={`sidebar__history-item ${
-              conv.session_id === activeSessionId ? "sidebar__history-item--active" : ""
-            }`}
+            className={`sidebar__history-item ${conv.session_id === activeSessionId ? "sidebar__history-item--active" : ""
+              }`}
             onClick={() => handleSelectConversation(conv.session_id)}
           >
             <span className="sidebar__history-title">{conv.title}</span>
