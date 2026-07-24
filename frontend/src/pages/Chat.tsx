@@ -101,7 +101,13 @@ export default function Chat() {
           <div className="chat-input-waveform">
             <div className="chat-waveform-bars">
               {Array.from({ length: 28 }).map((_, i) => (
-                <span key={i} style={{ animationDelay: `${(i % 7) * 0.08}s` }} />
+                <span
+                  key={i}
+                  style={{
+                    animationDelay: `${(i % 7) * 0.09}s`,
+                    animationDuration: `${0.9 + (i % 5) * 0.12}s`,
+                  }}
+                />
               ))}
             </div>
           </div>
