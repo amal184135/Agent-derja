@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Plus, History, LogOut, ChevronLeft, Bot, Trash2, Menu, X } from "lucide-react"; // AJOUT: Menu, X
+import { Plus, LogOut, ChevronLeft, Bot, Check, X, MoreHorizontal, Menu } from "lucide-react";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
 import { useConversationsContext } from "../context/ConversationsContext";
@@ -16,6 +16,14 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false); // AJOUT: état d'ouverture du drawer mobile
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+
   const { username, logoutUser } = useAuth();
   const { conversations, rename, remove } = useConversationsContext();
   const navigate = useNavigate();
@@ -78,7 +86,9 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
   };
 
   return (
-    <> {/* AJOUT: fragment pour englober le hamburger + overlay + aside */}
+    <>
+      {" "}
+      {/* AJOUT: fragment pour englober le hamburger + overlay + aside */}
       {/* AJOUT: bouton hamburger flottant, visible uniquement sur mobile (voir CSS) */}
       <button
         className={`sidebar__mobile-toggle ${mobileOpen ? "sidebar__mobile-toggle--hidden" : ""}`}
@@ -87,13 +97,11 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
       >
         <Menu size={20} />
       </button>
-
       {/* AJOUT: overlay sombre derrière le drawer ouvert */}
       <div
         className={`sidebar__overlay ${mobileOpen ? "sidebar__overlay--visible" : ""}`}
         onClick={() => setMobileOpen(false)}
       />
-
       <aside
         className={`sidebar ${collapsed ? "sidebar--collapsed" : ""} ${
           mobileOpen ? "sidebar--mobile-open" : "" // AJOUT: classe pour afficher le drawer sur mobile
@@ -137,38 +145,102 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
           <span className="sidebar__new-chat-label">New chat</span>
         </button>
 
-        <nav className="sidebar__nav">
-          <div className="sidebar__nav-item sidebar__nav-item--static">
-            <span className="sidebar__nav-icon">
-              <History size={20} strokeWidth={2} />
-            </span>
-            <span className="sidebar__nav-label">Historique</span>
-          </div>
-        </nav>
-
         {/* Liste des conversations */}
-        <div className="sidebar__history">
-          {conversations.map((conv) => (
-            <div
-              key={conv.session_id}
-              className={`sidebar__history-item ${conv.session_id === activeSessionId ? "sidebar__history-item--active" : ""
-                }`}
-              onClick={() => handleSelectConversation(conv.session_id)}
-            >
-              <span className="sidebar__history-title">{conv.title}</span>
-              <button
-                className="sidebar__history-delete"
-                aria-label="Supprimer la conversation"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPendingDelete(conv.session_id);
-                }}
+        <div className="sidebar__history-wrapper">
+          <span className="sidebar__history-label">Recent</span>
+          <div className="sidebar__history">
+            {conversations.map((conv) => (
+              <div
+                key={conv.session_id}
+                className={`sidebar__history-item ${conv.session_id === activeSessionId ? "sidebar__history-item--active" : ""}`}
+                onClick={() =>
+                  editingId !== conv.session_id &&
+                  handleSelectConversation(conv.session_id)
+                }
               >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
+                {editingId === conv.session_id ? (
+                  <input
+                    className="sidebar__history-input"
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter")
+                        commitEdit(conv.session_id, conv.title);
+                      if (e.key === "Escape") cancelEditing();
+                    }}
+                  />
+                ) : (
+                  <span
+                    className="sidebar__history-title"
+                    onDoubleClick={(e) =>
+                      startEditing(e, conv.session_id, conv.title)
+                    }
+                  >
+                    {conv.title}
+                  </span>
+                )}
+
+                {editingId === conv.session_id ? (
+                  <div className="sidebar__history-actions">
+                    <button
+                      className="sidebar__history-confirm"
+                      aria-label="Confirmer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        commitEdit(conv.session_id, conv.title);
+                      }}
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      className="sidebar__history-cancel"
+                      aria-label="Annuler"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cancelEditing();
+                      }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="sidebar__history-menu-wrapper">
+                    <button
+                      className="sidebar__history-more"
+                      aria-label="Plus d'options"
+                      onClick={(e) => handleToggleMenu(e, conv.session_id)}
+                    >
+                      <MoreHorizontal size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
+
+        {openMenuId && menuPosition && (
+          <HistoryMenu
+            position={menuPosition}
+            onRename={() => {
+              const conv = conversations.find(
+                (c) => c.session_id === openMenuId,
+              );
+              if (conv) {
+                setEditingId(conv.session_id);
+                setEditValue(conv.title);
+              }
+              setOpenMenuId(null);
+            }}
+            onDelete={() => {
+              setPendingDelete(openMenuId);
+              setOpenMenuId(null);
+            }}
+            onClose={() => setOpenMenuId(null)}
+          />
+        )}
 
         <div className="sidebar__spacer" />
 
@@ -177,9 +249,15 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
             <div className="sidebar__user-avatar">
               {username?.charAt(0).toUpperCase() ?? "U"}
             </div>
-            <span className="sidebar__user-name">{username ?? "Utilisateur"}</span>
+            <span className="sidebar__user-name">
+              {username ?? "Utilisateur"}
+            </span>
           </button>
-          <button className="sidebar__logout-icon" onClick={logoutUser} aria-label="Se déconnecter">
+          <button
+            className="sidebar__logout-icon"
+            onClick={logoutUser}
+            aria-label="Se déconnecter"
+          >
             <LogOut size={18} strokeWidth={2} />
           </button>
         </div>
