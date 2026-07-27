@@ -154,51 +154,85 @@
 .chat-voice-label { font-size: 13.5px; font-weight: 600; color: var(--orange); }
 
 /* ---------- Barre de saisie ---------- */
+/* MODIFIÉ: chat-input-bar devient la carte englobante (colonne : texte en haut, boutons en dessous),
+   au lieu d'une rangée textarea + boutons côte à côte */
 .chat-input-bar {
-  display: flex; align-items: flex-end; gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* MODIFIÉ: resserré (avant 10px) */
   max-width: 760px; width: 100%; margin: 0 auto;
-  padding: 16px 32px 24px; border-top: 1px solid var(--border); background: #fff;
+  padding: 10px 14px; /* MODIFIÉ: resserré (avant 14px 18px 14px) */
+  margin-bottom: 20px;
+  border: 1.5px solid var(--border);
+  border-radius: 18px; /* MODIFIÉ: légèrement réduit (avant 22px) pour rester proportionné à la carte plus basse */
+  background: var(--bg-input);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chat-input-bar:focus-within {
+  border-color: var(--orange); /* AJOUT: la carte entière réagit au focus, pas juste le textarea */
+  box-shadow: 0 0 0 3px rgba(232, 89, 12, 0.12);
 }
 
 .chat-input {
-  flex: 1;
+  flex: none; /* MODIFIÉ (était flex: 1): flex-basis:0% forçait le navigateur à ignorer
+                 la hauteur fixée par le JS (auto-resize) sur l'axe vertical du flex column parent */
+  width: 100%;
   resize: none;
-  max-height: 140px;
-  padding: 13px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
+  min-height: 24px; /* MODIFIÉ: réduit, la carte était trop haute par défaut (56px avant) */
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 4px 4px;
+  border: none;
+  border-radius: 0;
   font-size: 15px;
   font-family: inherit;
-  background: var(--bg-input);
+  background: transparent;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: height 0.1s ease;
 }
-.chat-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232, 89, 12, 0.12); }
-.chat-input:disabled { opacity: 0.5; cursor: not-allowed; background: #f5f0ea; }
+.chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* AJOUT: scrollbar fine et discrète (remplace les flèches ▲▼ natives du navigateur
+   qui apparaissent une fois max-height atteint), cohérente avec .chat-messages */
+.chat-input::-webkit-scrollbar { width: 5px; }
+.chat-input::-webkit-scrollbar-track { background: transparent; }
+.chat-input::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+.chat-input::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+.chat-input { scrollbar-width: thin; scrollbar-color: var(--border) transparent; } /* AJOUT: équivalent Firefox */
+
+/* AJOUT: rangée des boutons (mic + envoyer), positionnée SOUS le texte, alignée à droite */
+.chat-input-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
 
 /* ---------- Bouton micro ---------- */
 .chat-mic-btn {
   position: relative;
-  width: var(--control-size); height: var(--control-size); flex-shrink: 0;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-input);
+  width: 34px; height: 34px; /* MODIFIÉ: réduit pour libérer de l'espace au texte */
+  flex-shrink: 0;
+  border: none; /* MODIFIÉ: plus de bordure propre, s'intègre dans la carte */
+  border-radius: 50%; /* MODIFIÉ: bouton rond, façon référence */
+  background: transparent; /* MODIFIÉ: discret par défaut */
   color: var(--text-muted);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition: color 0.2s ease, background 0.2s ease;
 }
-.chat-mic-btn svg { width: 20px; height: 20px; z-index: 1; }
-.chat-mic-btn:hover { border-color: var(--orange); color: var(--orange); }
+.chat-mic-btn svg { width: 17px; height: 17px; z-index: 1; } /* MODIFIÉ: icône plus petite */
+.chat-mic-btn:hover { background: rgba(232, 89, 12, 0.08); color: var(--orange); }
 
-.chat-mic-btn-active { background: var(--orange-gradient); border-color: transparent; color: #fff; }
+.chat-mic-btn-active { background: var(--orange-gradient); color: #fff; }
 .chat-mic-btn-active:hover { color: #fff; }
 
-.chat-mic-btn-interrupt { background-color: #dc2626; border-color: transparent; color: #fff; }
+.chat-mic-btn-interrupt { background-color: #dc2626; color: #fff; }
 .chat-mic-btn-interrupt:hover { color: #fff; }
 
 .chat-mic-pulse {
-  position: absolute; inset: 0; border-radius: var(--radius);
+  position: absolute; inset: 0; border-radius: 50%;
   background: rgba(232, 89, 12, 0.4);
   animation: mic-pulse 1.4s ease-out infinite;
 }
@@ -209,15 +243,16 @@
 
 /* ---------- Bouton envoyer ---------- */
 .chat-send-btn {
-  width: var(--control-size); height: var(--control-size); flex-shrink: 0;
-  border: none; border-radius: var(--radius);
+  width: 34px; height: 34px; /* MODIFIÉ: réduit pour libérer de l'espace au texte */
+  flex-shrink: 0;
+  border: none; border-radius: 50%; /* MODIFIÉ: bouton rond, façon référence */
   background: var(--orange-gradient);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  box-shadow: 0 6px 14px rgba(232, 89, 12, 0.25);
+  box-shadow: 0 4px 10px rgba(232, 89, 12, 0.25);
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
-.chat-send-btn svg { width: 20px; height: 20px; }
+.chat-send-btn svg { width: 16px; height: 16px; } /* MODIFIÉ: icône plus petite */
 .chat-send-btn:hover { transform: translateY(-1px); }
 .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
 
@@ -225,4 +260,50 @@
   .chat-header, .chat-messages, .chat-input-bar { padding-left: 16px; padding-right: 16px; }
   .chat-bubble-row { max-width: 88%; }
   .chat-scroll-to-bottom { right: 16px; }
+
+  /* AJOUT: réserve la place du hamburger fixe de la Sidebar (top:16px; left:16px; width:40px)
+     pour que "Chat with Agent Derja" ne soit plus chevauché */
+  .chat-header {
+    padding-left: 64px;
+  }
+
+  /* AJOUT: aligne verticalement le titre avec le centre du bouton hamburger (40px de haut) */
+  .chat-header h1,
+  .chat-header p {
+    line-height: 1.3;
+  }
+
+  /* MODIFIÉ: la carte garde son padding/radius, juste un peu resserrée sur mobile */
+  .chat-input-bar {
+    padding: 12px 14px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  /* MODIFIÉ: police légèrement réduite pour un meilleur rendu mobile */
+  .chat-input {
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  /* MODIFIÉ: boutons encore un peu plus petits sur mobile */
+  .chat-mic-btn,
+  .chat-send-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* AJOUT: ajustement supplémentaire pour très petits écrans (ex: iPhone SE) */
+@media (max-width: 360px) {
+  .chat-input {
+    font-size: 13.5px;
+    min-height: 44px;
+  }
+
+  .chat-mic-btn,
+  .chat-send-btn {
+    width: 30px;
+    height: 30px;
+  }
 }

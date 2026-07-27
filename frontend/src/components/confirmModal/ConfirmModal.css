@@ -7,6 +7,7 @@
   align-items: center;
   z-index: 9999;
   padding: 1rem;
+  box-sizing: border-box; /* AJOUT: le padding ne doit pas créer de débordement horizontal */
 }
 
 .modal-box {
@@ -17,6 +18,8 @@
   max-width: 400px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   text-align: center;
+  box-sizing: border-box; /* AJOUT: empêche le padding d'agrandir la boîte au-delà de max-width */
+  word-wrap: break-word; /* AJOUT: évite le débordement du texte du message sur petit écran */
 }
 
 .modal-box p {
@@ -65,6 +68,7 @@
 @media (max-width: 480px) {
   .modal-box {
     padding: 1rem;
+    max-width: calc(100vw - 2rem); /* AJOUT: garde une marge des deux côtés sur très petit écran */
   }
 
   .modal-box p {
@@ -75,5 +79,12 @@
   .cancel-btn {
     font-size: 0.95rem;
     flex: 1 1 100%;
+  }
+}
+
+/* AJOUT: boutons empilés verticalement sur écrans très étroits (ex: iPhone SE) */
+@media (max-width: 360px) {
+  .modal-buttons {
+    flex-direction: column;
   }
 }
