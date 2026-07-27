@@ -19,10 +19,21 @@ export default function Chat() {
   } = useChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // AJOUT: référence pour ajuster la hauteur dynamiquement
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // AJOUT: agrandit/réduit automatiquement la barre de saisie selon le volume de texte.
+  // Se déclenche à chaque changement de `input`, y compris quand le texte est vidé après l'envoi.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto"; // AJOUT: reset pour recalculer correctement scrollHeight
+      el.style.height = `${el.scrollHeight}px`; // AJOUT: applique la nouvelle hauteur selon le contenu
+    }
+  }, [input]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -96,6 +107,8 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* MODIFIÉ: chat-input-bar devient la carte englobante (textarea + boutons empilés dedans),
+          style "Discuter avec Claude" au lieu d'une rangée textarea + boutons côte à côte */}
       <div className="chat-input-bar">
         {isRecording ? (
           <div className="chat-input-waveform">
@@ -113,6 +126,7 @@ export default function Chat() {
           </div>
         ) : (
           <textarea
+            ref={textareaRef}
             className="chat-input"
             placeholder={isTranscribing ? "Transcription en cours..." : "Type your message in Derja..."}
             value={input}
@@ -123,37 +137,40 @@ export default function Chat() {
           />
         )}
 
-        <button
-          className={`chat-mic-btn ${isRecording ? "chat-mic-btn-recording" : ""} ${(isSending || isTranscribing) && !isRecording ? "chat-mic-btn-interrupt" : ""
-            }`}
-          onClick={handleMicClick}
-          aria-label={
-            isRecording ? "Stop recording" : isSending || isTranscribing ? "Interrupt" : "Start voice message"
-          }
-          type="button"
-        >
-          {isRecording || isTranscribing || isSending ? (
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
-              <path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-        </button>
+        {/* AJOUT: rangée des boutons repositionnée EN DESSOUS du texte, dans la même carte */}
+        <div className="chat-input-actions">
+          <button
+            className={`chat-mic-btn ${isRecording ? "chat-mic-btn-recording" : ""} ${(isSending || isTranscribing) && !isRecording ? "chat-mic-btn-interrupt" : ""
+              }`}
+            onClick={handleMicClick}
+            aria-label={
+              isRecording ? "Stop recording" : isSending || isTranscribing ? "Interrupt" : "Start voice message"
+            }
+            type="button"
+          >
+            {isRecording || isTranscribing || isSending ? (
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
+                <path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </button>
 
-        <button
-          className="chat-send-btn"
-          onClick={handleSendClick}
-          aria-label="Send message"
-          disabled={isSending || isTranscribing || (!isRecording && !input.trim())}
-        >
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+          <button
+            className="chat-send-btn"
+            onClick={handleSendClick}
+            aria-label="Send message"
+            disabled={isSending || isTranscribing || (!isRecording && !input.trim())}
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
       </div>
 
     </main>

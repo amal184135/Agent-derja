@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom' // AJOUT: pour sortir le modal du flux de la Sidebar (transform)
 import './ConfirmModal.css'
 
 interface ConfirmModalProps {
@@ -12,7 +13,10 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ show, onConfirm, onCancel, 
 
   if (!show) return null;
 
-  return (
+  // AJOUT: createPortal rend le modal directement dans document.body.
+  // Nécessaire car la Sidebar a un `transform` (pour l'animation du drawer mobile),
+  // ce qui casse le `position: fixed` du modal s'il reste à l'intérieur.
+  return createPortal(
     <div className="modal-overlay">
       <div className="modal-box">
         <p>{message}</p>
@@ -21,7 +25,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ show, onConfirm, onCancel, 
           <button className="cancel-btn" onClick={onCancel}>Cancel</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body // AJOUT: cible du portail
   );
 }
 

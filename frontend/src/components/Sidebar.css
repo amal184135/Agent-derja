@@ -363,3 +363,154 @@
   background: #fee2e2;
   color: #dc2626;
 }
+
+/* ================= AJOUT: RESPONSIVE (mobile) ================= */
+
+/* AJOUT: bouton hamburger, caché par défaut (desktop) */
+.sidebar__mobile-toggle {
+  display: none;
+}
+
+/* AJOUT: overlay derrière le drawer, caché par défaut (desktop) */
+.sidebar__overlay {
+  display: none;
+}
+
+/* AJOUT: bouton close (X), caché par défaut (desktop) */
+.sidebar__mobile-close {
+  display: none;
+}
+
+/* AJOUT: neutre sur desktop, devient une rangée flex sur mobile (voir media query) */
+.sidebar__mobile-header {
+  display: contents;
+}
+
+@media (max-width: 768px) {
+  /* AJOUT: la sidebar devient un drawer plein écran qui glisse depuis la gauche */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    min-height: 100vh;
+    width: 260px;
+    max-width: 80vw;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar--mobile-open {
+    transform: translateX(0);
+  }
+
+  /* AJOUT: sur mobile, le mode "collapsed" desktop est désactivé (toujours affiché en entier) */
+  .sidebar--collapsed {
+    width: 260px;
+    padding: 20px 16px;
+  }
+
+  .sidebar--collapsed .sidebar__brand-text,
+  .sidebar--collapsed .sidebar__new-chat-label,
+  .sidebar--collapsed .sidebar__nav-label,
+  .sidebar--collapsed .sidebar__user-name {
+    width: auto;
+    max-width: 160px;
+    opacity: 1;
+  }
+
+  .sidebar--collapsed .sidebar__history {
+    display: flex;
+  }
+
+  /* AJOUT: le toggle desktop (ChevronLeft) est inutile sur mobile */
+  .sidebar__toggle {
+    display: none;
+  }
+
+  /* AJOUT: hamburger flottant pour ouvrir la sidebar */
+  .sidebar__mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1001;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+    cursor: pointer;
+  }
+
+  .sidebar__mobile-toggle--hidden {
+    display: none;
+  }
+
+  /* AJOUT: overlay sombre derrière le drawer ouvert */
+  .sidebar__overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out;
+  }
+
+  .sidebar__overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* AJOUT: le bouton delete doit rester visible sans hover (pas de hover au doigt) */
+  .sidebar__history-delete {
+    opacity: 1;
+  }
+
+  /* AJOUT: rangée titre + bouton X, alignés comme dans Gemini (espace-entre) */
+  .sidebar__mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .sidebar__mobile-header .sidebar__brand {
+    margin-bottom: 0;
+  }
+
+  /* AJOUT: bouton close rond, suit le flux flex (pas de position absolute) */
+  .sidebar__mobile-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(234, 88, 12, 0.08);
+    color: #ea580c;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .sidebar__mobile-close:hover {
+    background: rgba(234, 88, 12, 0.18);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 85vw;
+    max-width: 300px;
+  }
+}
