@@ -35,6 +35,7 @@ export function useChat() {
     const [isSending, setIsSending] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(routeSessionId ?? null);
     const [isTranscribing, setIsTranscribing] = useState(false);
+    const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -55,6 +56,7 @@ export function useChat() {
         if (!routeSessionId) {
             setSessionId(null);
             setMessages([WELCOME_MESSAGE]);
+            setUpdatedAt(null);
             return;
         }
 
@@ -69,6 +71,7 @@ export function useChat() {
                         timestamp: formatTime(new Date(m.timestamp)),
                     }))
                 );
+                setUpdatedAt(conv.updated_at ?? null); 
             })
             .catch((err) => {
                 console.error("Erreur chargement conversation:", err);
@@ -124,6 +127,7 @@ export function useChat() {
             }
 
             addMessage("bot", data.reply);
+            setUpdatedAt(new Date().toISOString());
             refresh();
         } catch (err) {
             if ((err as Error).name === "AbortError") {
@@ -202,6 +206,7 @@ export function useChat() {
                 if (data.type === "done") {
                     addMessage("bot", data.full_reply);
                     setIsSending(false);
+                    setUpdatedAt(new Date().toISOString());
                     wsRef.current = null;
                     ws.close();
                     refresh();
@@ -320,5 +325,6 @@ export function useChat() {
         handleSend,
         handleSendClick,
         handleMicClick,
+        updatedAt,
     };
 }
