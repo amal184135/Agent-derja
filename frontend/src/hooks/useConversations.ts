@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
-import { deleteConversation, getConversations } from "../services/api";
+import {
+  deleteConversation,
+  getConversations,
+  renameConversation,
+} from "../services/api";
 import type { ConversationSummary } from "../services/api";
 
 export function useConversations() {
@@ -25,14 +29,27 @@ export function useConversations() {
     refresh();
   }, [refresh]);
 
+  const rename = useCallback(
+    async (sessionId: string, title: string) => {
+      if (!token) return;
+      await renameConversation(token, sessionId, title);
+      setConversations((prev) =>
+        prev.map((c) => (c.session_id === sessionId ? { ...c, title } : c)),
+      );
+    },
+    [token],
+  );
+
   const remove = useCallback(
     async (sessionId: string) => {
       if (!token) return;
       await deleteConversation(token, sessionId);
-      setConversations((prev) => prev.filter((c) => c.session_id !== sessionId));
+      setConversations((prev) =>
+        prev.filter((c) => c.session_id !== sessionId),
+      );
     },
-    [token]
+    [token],
   );
 
-  return { conversations, loading, refresh, remove };
+  return { conversations, loading, refresh, rename, remove };
 }

@@ -5,6 +5,7 @@ import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
 import { useConversationsContext } from "../context/ConversationsContext";
 import ConfirmModal from "./confirmModal/ConfirmModal";
+import HistoryMenu from "./historyMenu/HistoryMenu";
 
 interface SidebarProps {
   onNewChat?: () => void;
@@ -16,7 +17,7 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false); // AJOUT: état d'ouverture du drawer mobile
   const { username, logoutUser } = useAuth();
-  const { conversations, remove } = useConversationsContext();
+  const { conversations, rename, remove } = useConversationsContext();
   const navigate = useNavigate();
   const { sessionId: activeSessionId } = useParams();
 
@@ -29,6 +30,43 @@ export default function Sidebar({ onNewChat, onProfileClick }: SidebarProps) {
   const handleSelectConversation = (sessionId: string) => {
     navigate(`/chat/${sessionId}`);
     setMobileOpen(false); // AJOUT: ferme le drawer après sélection
+  };
+
+  const handleToggleMenu = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    if (openMenuId === sessionId) {
+      setOpenMenuId(null);
+      return;
+    }
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuPosition({ top: rect.bottom + 4, left: rect.right - 150 }); // 150 = largeur min du popup
+    setOpenMenuId(sessionId);
+  };
+
+  const startEditing = (
+    e: React.MouseEvent,
+    sessionId: string,
+    currentTitle: string,
+  ) => {
+    e.stopPropagation();
+    setEditingId(sessionId);
+    setEditValue(currentTitle);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const commitEdit = async (sessionId: string, originalTitle: string) => {
+    const trimmed = editValue.trim();
+    setEditingId(null);
+    if (!trimmed || trimmed === originalTitle) return;
+    try {
+      await rename(sessionId, trimmed);
+    } catch (err) {
+      console.error("Erreur renommage:", err);
+    }
   };
 
   const handleConfirmDelete = async () => {

@@ -4,11 +4,15 @@
   flex-direction: column;
   flex-shrink: 0;
   width: 260px;
-  min-height: 100vh;
+  height: 100vh; /* was min-height: 100vh */
+  min-height: 0; /* allow flex children to shrink */
   padding: 20px 16px;
   background: linear-gradient(180deg, #fff1e6 0%, #fff8f2 100%);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition:
+    width 0.3s ease-in-out,
+    padding 0.3s ease-in-out;
 }
 
 .sidebar--collapsed {
@@ -73,7 +77,9 @@
   width: 160px;
   opacity: 1;
   white-space: nowrap;
-  transition: width 0.3s ease-in-out, opacity 0.2s ease-in-out;
+  transition:
+    width 0.3s ease-in-out,
+    opacity 0.2s ease-in-out;
 }
 
 .sidebar--collapsed .sidebar__brand-text {
@@ -110,7 +116,11 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(234, 88, 12, 0.28);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, gap 0.3s ease-in-out, padding 0.3s ease-in-out;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    gap 0.3s ease-in-out,
+    padding 0.3s ease-in-out;
 }
 
 .sidebar--collapsed .sidebar__new-chat {
@@ -133,7 +143,9 @@
   max-width: 100px;
   opacity: 1;
   white-space: nowrap;
-  transition: max-width 0.3s ease-in-out, opacity 0.2s ease-in-out;
+  transition:
+    max-width 0.3s ease-in-out,
+    opacity 0.2s ease-in-out;
 }
 
 .sidebar--collapsed .sidebar__new-chat-label {
@@ -163,7 +175,11 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, gap 0.3s ease-in-out, justify-content 0.3s ease-in-out;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    gap 0.3s ease-in-out,
+    justify-content 0.3s ease-in-out;
 }
 
 .sidebar--collapsed .sidebar__nav-item {
@@ -192,7 +208,9 @@
   max-width: 128px;
   opacity: 1;
   white-space: nowrap;
-  transition: max-width 0.3s ease-in-out, opacity 0.2s ease-in-out;
+  transition:
+    max-width 0.3s ease-in-out,
+    opacity 0.2s ease-in-out;
 }
 
 .sidebar--collapsed .sidebar__nav-label {
@@ -202,7 +220,7 @@
 
 /* Spacer (future chat history list goes here) */
 .sidebar__spacer {
-  flex: 1;
+  display: none;
 }
 
 /* Footer / user */
@@ -214,6 +232,7 @@
   padding-top: 12px;
   border-top: 1px solid rgba(234, 88, 12, 0.12);
   transition: justify-content 0.3s ease-in-out;
+  margin-top: auto;
 }
 
 .sidebar--collapsed .sidebar__footer {
@@ -232,7 +251,9 @@
   padding: 4px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.15s ease, justify-content 0.3s ease-in-out;
+  transition:
+    background-color 0.15s ease,
+    justify-content 0.3s ease-in-out;
 }
 
 .sidebar__user:hover {
@@ -266,7 +287,9 @@
   font-weight: 600;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: max-width 0.3s ease-in-out, opacity 0.2s ease-in-out;
+  transition:
+    max-width 0.3s ease-in-out,
+    opacity 0.2s ease-in-out;
 }
 
 .sidebar--collapsed .sidebar__user-name {
@@ -286,7 +309,9 @@
   background: transparent;
   color: #b45309;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .sidebar--collapsed .sidebar__logout-icon {
@@ -303,8 +328,29 @@
   flex-direction: column;
   gap: 2px;
   margin-top: 8px;
+  flex: 1; /* take remaining vertical space */
+  min-height: 0; /* critical: lets it shrink instead of overflowing the flex parent */
+  scrollbar-width: thin;
+  scrollbar-color: #fb923c transparent;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.sidebar__history::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar__history::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar__history::-webkit-scrollbar-thumb {
+  background: #fdba8c;
+  border-radius: 999px;
+}
+
+.sidebar__history::-webkit-scrollbar-thumb:hover {
+  background: #fb923c;
 }
 
 .sidebar--collapsed .sidebar__history {
@@ -312,6 +358,7 @@
 }
 
 .sidebar__history-item {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -334,9 +381,32 @@
   overflow: hidden;
   flex: 1;
   color: #7c4a2d;
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.sidebar__history-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 12px;
+}
+
+.sidebar__history-label {
+  flex-shrink: 0;
+  margin-bottom: 6px;
+  padding: 0 12px;
+  color: #b98a68;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sidebar--collapsed .sidebar__history-label {
+  display: none;
 }
 
 .sidebar__history-delete {
@@ -352,7 +422,10 @@
   color: #b45309;
   opacity: 0;
   cursor: pointer;
-  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .sidebar__history-item:hover .sidebar__history-delete {

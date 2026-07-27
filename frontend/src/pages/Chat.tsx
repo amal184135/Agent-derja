@@ -3,6 +3,7 @@ import "./Chat.css";
 import { useAuth } from "../hooks/useAuth";
 import { useChat } from "../hooks/useChat";
 import { removeArabicDiacritics } from "../utils/arabic";
+import { formatUpdatedAt } from "../utils/date";
 
 export default function Chat() {
   const { username } = useAuth();
@@ -14,8 +15,9 @@ export default function Chat() {
     isRecording,
     isTranscribing,
     handleSend,
-    handleSendClick,   // <-- nouveau
+    handleSendClick, // <-- nouveau
     handleMicClick,
+    updatedAt,
   } = useChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -47,6 +49,11 @@ export default function Chat() {
       <header className="chat-header">
         <h1>Chat with Agent Derja</h1>
         <p>Welcome back, {username}</p>
+        {updatedAt && (
+          <p className="chat-updated-at">
+            Last update : {formatUpdatedAt(updatedAt)}
+          </p>
+        )}
       </header>
 
       <div className="chat-messages">
@@ -57,26 +64,54 @@ export default function Chat() {
           >
             {msg.sender === "bot" && (
               <div className="chat-bubble-avatar">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="4" y="8" width="16" height="12" rx="3" stroke="white" strokeWidth="2" />
-                  <path d="M12 8V4" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x="4"
+                    y="8"
+                    width="16"
+                    height="12"
+                    rx="3"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M12 8V4"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                   <circle cx="12" cy="3" r="1.3" fill="white" />
                   <circle cx="9" cy="14" r="1.4" fill="white" />
                   <circle cx="15" cy="14" r="1.4" fill="white" />
-                  <path d="M2 12h2M20 12h2" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                  <path
+                    d="M2 12h2M20 12h2"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </div>
             )}
             <div className="chat-bubble-content">
               <div
-                className={`chat-bubble ${msg.sender === "user" ? "chat-bubble-user" : "chat-bubble-bot"
-                  }`}
+                className={`chat-bubble ${
+                  msg.sender === "user" ? "chat-bubble-user" : "chat-bubble-bot"
+                }`}
               >
-                {msg.sender === "bot" ? removeArabicDiacritics(msg.text) : msg.text}
+                {msg.sender === "bot"
+                  ? removeArabicDiacritics(msg.text)
+                  : msg.text}
               </div>
               <span
-                className={`chat-timestamp ${msg.sender === "user" ? "chat-timestamp-user" : "chat-timestamp-bot"
-                  }`}
+                className={`chat-timestamp ${
+                  msg.sender === "user"
+                    ? "chat-timestamp-user"
+                    : "chat-timestamp-bot"
+                }`}
               >
                 {msg.timestamp}
               </span>
@@ -87,13 +122,35 @@ export default function Chat() {
         {isSending && (
           <div className="chat-bubble-row">
             <div className="chat-bubble-avatar">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="8" width="16" height="12" rx="3" stroke="white" strokeWidth="2" />
-                <path d="M12 8V4" stroke="white" strokeWidth="2" strokeLinecap="round" />
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="4"
+                  y="8"
+                  width="16"
+                  height="12"
+                  rx="3"
+                  stroke="white"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M12 8V4"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
                 <circle cx="12" cy="3" r="1.3" fill="white" />
                 <circle cx="9" cy="14" r="1.4" fill="white" />
                 <circle cx="15" cy="14" r="1.4" fill="white" />
-                <path d="M2 12h2M20 12h2" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                <path
+                  d="M2 12h2M20 12h2"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
             <div className="chat-bubble chat-bubble-bot chat-typing">
@@ -128,7 +185,11 @@ export default function Chat() {
           <textarea
             ref={textareaRef}
             className="chat-input"
-            placeholder={isTranscribing ? "Transcription en cours..." : "Type your message in Derja..."}
+            placeholder={
+              isTranscribing
+                ? "Transcription en cours..."
+                : "Type your message in Derja..."
+            }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -172,7 +233,6 @@ export default function Chat() {
           </button>
         </div>
       </div>
-
     </main>
   );
 }

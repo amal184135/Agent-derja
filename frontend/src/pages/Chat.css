@@ -20,7 +20,12 @@
 
 .chat-header { padding: 20px 32px; border-bottom: 1px solid var(--border); }
 .chat-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 800; color: var(--orange); }
-.chat-header p { margin: 0; font-size: 13.5px; color: var(--text-muted); }
+.chat-header p { margin: 0; font-size: 14px; color: var(--text-muted); }
+
+.chat-header p.chat-updated-at {
+  font-size: 0.75rem;
+  color: #888;
+}
 
 /* ---------- Messages ---------- */
 .chat-messages {
