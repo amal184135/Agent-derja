@@ -59,6 +59,13 @@ async def list_conversations(username: str) -> list[dict]:
     return await cursor.to_list(length=200)
 
 
+async def rename_conversation(session_id: str, username: str, new_title: str) -> bool:
+    result = await conversations_collection.update_one(
+        {"session_id": session_id, "username": username},
+        {"$set": {"title": new_title, "updated_at": datetime.utcnow()}},
+    )
+    return result.matched_count > 0
+
 async def delete_conversation(session_id: str, username: str) -> bool:
     result = await conversations_collection.delete_one(
         {"session_id": session_id, "username": username}

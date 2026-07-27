@@ -38,3 +38,7 @@ class ConversationDetail(BaseModel):
     session_id: str
     title: str
     messages: list[MessageModel]
+    updated_at: datetime
+
+class RenameRequest(BaseModel):
+    title: str

@@ -23,6 +23,7 @@ export interface ConversationDetail {
   session_id: string;
   title: string;
   messages: ConversationMessage[];
+  updated_at: string;
 }
 
 export async function login(username: string, password: string) {
@@ -80,6 +81,22 @@ export async function getConversation(
   });
   if (!res.ok) throw new Error("Conversation introuvable");
   return res.json();
+}
+
+export async function renameConversation(
+  token: string,
+  sessionId: string,
+  title: string
+): Promise<void> {
+  const res = await fetch(`${API_URL}/conversations/${sessionId}`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify({ title }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => null);
+    throw new Error(errData?.detail || "Impossible de renommer la conversation");
+  }
 }
 
 export async function deleteConversation(token: string, sessionId: string): Promise<void> {
