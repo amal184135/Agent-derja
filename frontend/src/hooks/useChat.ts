@@ -204,6 +204,7 @@ export function useChat() {
                 }
 
                 if (data.type === "done") {
+                    console.log("Réponse LLM (vocal):", data.full_reply); // <-- ICI, c'est la vraie réponse Gemini
                     addMessage("bot", data.full_reply);
                     setIsSending(false);
                     setUpdatedAt(new Date().toISOString());

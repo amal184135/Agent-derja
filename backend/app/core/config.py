@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     STT_ADAPTER_PATH: str = "models_weights/whisper_lora"
     STT_DEFAULT_LANGUAGE: str = "arabic"
 
+    # --- Diacritization settings ---
+    DIACRITICS_DICT_PATH: Path = BASE_DIR / "models_weights" / "tun_diacritics_dict_v2.json"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
