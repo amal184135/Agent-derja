@@ -6,7 +6,11 @@ import torch
 from TTS.tts.configs.xtts_config import XttsConfig
 from app.core.config import settings
 from TTS.tts.models.xtts import Xtts
+from app.services.diacritizer_service import diacritizer
 
+import logging
+
+logger = logging.getLogger("tts_service")
 
 
 class TTSEngine:
@@ -45,8 +49,8 @@ class TTSEngine:
             # au lieu de le refaire a chaque appel de synthesize().
             self._gpt_cond_latent, self._speaker_embedding = model.get_conditioning_latents(
                 audio_path=[str(settings.TTS_REFERENCE_WAV)],
-                gpt_cond_len=xtts_config.gpt_cond_len,
-                gpt_cond_chunk_len=xtts_config.gpt_cond_chunk_len,
+                gpt_cond_len=6,
+                gpt_cond_chunk_len=4,
             )
 
     @property
@@ -61,11 +65,24 @@ class TTSEngine:
         if self._model is None:
             raise RuntimeError("Le modele TTS n'est pas encore charge")
 
+        if language == "ar":
+            original_text = text
+            text = diacritizer.correct(text)
+            logger.info("[TTS][diacritize] avant=%r", original_text)
+            logger.info("[TTS][diacritize] apres=%r", text)
+
+        logger.info("[TTS][input] texte envoye au modele (lang=%s): %r", language, text)
+
         outputs = self._model.inference(
             text,
             language,
             self._gpt_cond_latent,
             self._speaker_embedding,
+            temperature=0.65,
+            length_penalty=1.0,
+            repetition_penalty=5.0,
+            top_k=50,
+            top_p=0.85,
         )
 
         wav = outputs["wav"]

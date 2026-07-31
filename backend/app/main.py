@@ -6,6 +6,12 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+)
 
 
 
@@ -13,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth,chat, tts, stt, voice, conversation
 from app.services.tts_service import engine as tts_engine
 from app.services.stt_service import engine as stt_engine
+from app.services.diacritizer_service import diacritizer
 
 
 
@@ -20,6 +27,7 @@ from app.services.stt_service import engine as stt_engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     tts_engine.load()
+    diacritizer.load()
     print(f"TTS device: {tts_engine.device}")
 
     stt_engine.load()
