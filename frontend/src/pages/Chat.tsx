@@ -18,6 +18,8 @@ export default function Chat() {
     handleSendClick, // <-- nouveau
     handleMicClick,
     updatedAt,
+    outputMode,     // AJOUT
+    setOutputMode,  // AJOUT
   } = useChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -200,6 +202,26 @@ export default function Chat() {
 
         {/* AJOUT: rangée des boutons repositionnée EN DESSOUS du texte, dans la même carte */}
         <div className="chat-input-actions">
+          {/* AJOUT — toggle sortie texte / audio */}
+          <button
+            className="chat-mode-btn"
+            onClick={() => setOutputMode(outputMode === "text" ? "audio" : "text")}
+            aria-label={outputMode === "text" ? "Switch to audio reply" : "Switch to text reply"}
+            type="button"
+            title={outputMode === "text" ? "Réponse en texte" : "Réponse en audio"}
+          >
+            {outputMode === "text" ? (
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 5 6 9H2v6h4l5 4V5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                <path d="M15.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            )}
+          </button>
+
           <button
             className={`chat-mic-btn ${isRecording ? "chat-mic-btn-recording" : ""} ${(isSending || isTranscribing) && !isRecording ? "chat-mic-btn-interrupt" : ""
               }`}

@@ -80,9 +80,11 @@ class TTSEngine:
             self._speaker_embedding,
             temperature=0.65,
             length_penalty=1.0,
-            repetition_penalty=5.0,
+            repetition_penalty=3.0,      # etait 5.0 -> reduit pour eviter que le modele "fuie" les silences/pauses
             top_k=50,
             top_p=0.85,
+            speed=1.0,                    # explicite, ajustable si le debit reste trop rapide (essaie 0.9)
+            enable_text_splitting=True,   # decoupe par phrase en interne -> pacing stable meme sur texte long
         )
 
         wav = outputs["wav"]
