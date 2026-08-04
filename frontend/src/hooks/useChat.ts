@@ -36,6 +36,7 @@ export function useChat() {
     const [sessionId, setSessionId] = useState<string | null>(routeSessionId ?? null);
     const [isTranscribing, setIsTranscribing] = useState(false);
     const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+    const [outputMode, setOutputMode] = useState<"text" | "audio">("text"); // AJOUT
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -71,7 +72,7 @@ export function useChat() {
                         timestamp: formatTime(new Date(m.timestamp)),
                     }))
                 );
-                setUpdatedAt(conv.updated_at ?? null); 
+                setUpdatedAt(conv.updated_at ?? null);
             })
             .catch((err) => {
                 console.error("Erreur chargement conversation:", err);
@@ -88,6 +89,18 @@ export function useChat() {
 
     const addErrorMessage = () => {
         addMessage("bot", "معذرة، صار مشكل في الاتصال بالسيرفر. عاود جرب.");
+    };
+
+    // AJOUT — décode et joue l'audio renvoyé par /chat quand output_mode = "audio"
+    const playBase64Audio = (audioBase64: string) => {
+        const binary = atob(audioBase64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type: "audio/wav" });
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        audio.play();
     };
 
     // ---- Envoi texte (réutilisable, appelée soit manuellement soit en auto-send) ----
@@ -110,7 +123,7 @@ export function useChat() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ message, session_id: sessionId }),
+                body: JSON.stringify({ message, session_id: sessionId, output_mode: outputMode }), // MODIFIÉ — output_mode ajouté
                 signal: controller.signal,
             });
 
@@ -119,7 +132,7 @@ export function useChat() {
                 throw new Error(errData?.detail || `Erreur ${res.status}`);
             }
 
-            const data: { reply: string; session_id: string } = await res.json();
+            const data: { reply: string; session_id: string; audio_base64?: string | null } = await res.json(); // MODIFIÉ — audio_base64 ajouté au type
             setSessionId(data.session_id);
 
             if (isNewConversation) {
@@ -127,6 +140,7 @@ export function useChat() {
             }
 
             addMessage("bot", data.reply);
+            if (data.audio_base64) playBase64Audio(data.audio_base64); // AJOUT
             setUpdatedAt(new Date().toISOString());
             refresh();
         } catch (err) {
@@ -327,5 +341,7 @@ export function useChat() {
         handleSendClick,
         handleMicClick,
         updatedAt,
+        outputMode,      // AJOUT
+        setOutputMode,   // AJOUT
     };
 }

@@ -123,3 +123,24 @@ export async function sendChatMessage(
   }
   return res.json();
 }
+
+// AJOUT
+export type ChatOutputMode = "text" | "audio";
+
+export async function sendChatMessageWithMode(
+  token: string,
+  message: string,
+  sessionId: string | null,
+  outputMode: ChatOutputMode
+): Promise<{ reply: string; session_id: string; audio_base64?: string | null }> {
+  const res = await fetch(`${API_URL}/chat`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ message, session_id: sessionId, output_mode: outputMode }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => null);
+    throw new Error(errData?.detail || `Erreur ${res.status}`);
+  }
+  return res.json();
+}

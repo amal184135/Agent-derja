@@ -1,8 +1,12 @@
+from typing import Literal 
+import base64
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.core.deps import get_current_username
 from app.services import chat_service, conversation_service
+from app.services.tts_service import engine as tts_engine  # AJOUT
+from app.services.diacritizer_service import diacritizer  # AJOUT
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -10,11 +14,13 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
+    output_mode: Literal["text", "audio", "both"] = "text"  # AJOUT
 
 
 class ChatResponse(BaseModel):
     reply: str
     session_id: str
+    audio_base64: str | None = None  # AJOUT
 
 
 class ResetRequest(BaseModel):
@@ -42,7 +48,15 @@ async def chat(req: ChatRequest, username: str = Depends(get_current_username)):
 
     await conversation_service.append_messages(session_id, username, req.message, reply)
 
-    return ChatResponse(reply=reply, session_id=session_id)
+    audio_base64 = None
+    if req.output_mode in ("audio", "both"):
+        if not tts_engine.is_ready:
+            raise HTTPException(status_code=503, detail="[TTS] modele en cours de chargement")
+        diacritized_reply = diacritizer.correct(reply)
+        audio_bytes = tts_engine.synthesize(diacritized_reply, "ar")
+        audio_base64 = base64.b64encode(audio_bytes).decode("ascii")
+
+    return ChatResponse(reply=reply, session_id=session_id, audio_base64=audio_base64)
 
 
 @router.post("/reset")

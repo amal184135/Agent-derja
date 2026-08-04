@@ -209,6 +209,24 @@
   gap: 8px;
 }
 
+/* AJOUT — bouton toggle texte/audio, même charte que .chat-mic-btn */
+.chat-mode-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.chat-mode-btn svg { width: 17px; height: 17px; }
+.chat-mode-btn:hover { background: rgba(232, 89, 12, 0.08); color: var(--orange); }
+
 /* ---------- Bouton micro ---------- */
 .chat-mic-btn {
   position: relative;
@@ -288,7 +306,8 @@
 
   /* MODIFIÉ: boutons encore un peu plus petits sur mobile */
   .chat-mic-btn,
-  .chat-send-btn {
+  .chat-send-btn,
+  .chat-mode-btn {
     width: 32px;
     height: 32px;
   }
@@ -302,7 +321,8 @@
   }
 
   .chat-mic-btn,
-  .chat-send-btn {
+  .chat-send-btn,
+  .chat-mode-btn {
     width: 30px;
     height: 30px;
   }
