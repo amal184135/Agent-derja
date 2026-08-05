@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -6,8 +6,8 @@ from jose import JWTError, jwt
 
 from app.core.config import settings
 from app.core.security import create_access_token
-from app.models.user import UserCreate
-from app.services.auth_service import authenticate_user, create_user, get_user_by_username
+from app.models.user import UserCreate, UserUpdate, UserOut, ChangePasswordRequest
+from app.services.auth_service import authenticate_user, create_user, get_user_by_username, update_user_profile, change_user_password
 
 router = APIRouter(tags=["auth"])
 
@@ -36,6 +36,14 @@ class InvalidTokenException(HTTPException):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Token is invalid or expired",
+        )
+
+
+class IncorrectPasswordException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
         )
 
 
@@ -74,3 +82,49 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @router.get("/verify-token")
 async def verify_user_token(payload: dict = Depends(verify_token)):
     return {"message": "Token is valid"}
+
+
+def serialize_user(user: dict) -> UserOut:
+    dob = user.get("date_naissance")
+    if isinstance(dob, datetime):
+        dob = dob.date()
+
+    return UserOut(
+        id=str(user["_id"]),
+        username=user["username"],
+        phone_number=user.get("phone_number"),
+        date_naissance=dob,
+        sexe=user.get("sexe"),
+        statut_marital=user.get("statut_marital"),
+    )
+
+
+@router.get("/me", response_model=UserOut)
+async def get_my_profile(payload: dict = Depends(verify_token)):
+    user = await get_user_by_username(payload["sub"])
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+    return serialize_user(user)
+
+
+@router.put("/me", response_model=UserOut)
+async def update_my_profile(data: UserUpdate, payload: dict = Depends(verify_token)):
+    user = await get_user_by_username(payload["sub"])
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    updated_user = await update_user_profile(str(user["_id"]), data)
+    return serialize_user(updated_user)
+
+@router.put("/me/change-password")
+async def change_password(
+    data: ChangePasswordRequest, payload: dict = Depends(verify_token)
+):
+    user = await get_user_by_username(payload["sub"])
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    success = await change_user_password(
+        str(user["_id"]), data.current_password, data.new_password
+    )
+    if not success:
+        raise IncorrectPasswordException()
+    return {"message": "Password updated successfully"}

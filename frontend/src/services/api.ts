@@ -26,6 +26,15 @@ export interface ConversationDetail {
   updated_at: string;
 }
 
+export interface UserProfile {
+  id: string;
+  username: string;
+  phone_number?: string;
+  date_naissance?: string;
+  sexe?: string;
+  statut_marital?: string;
+}
+
 export async function login(username: string, password: string) {
   const form = new FormData();
   form.append("username", username);
@@ -141,6 +150,60 @@ export async function sendChatMessageWithMode(
   if (!res.ok) {
     const errData = await res.json().catch(() => null);
     throw new Error(errData?.detail || `Erreur ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getProfile(token: string): Promise<UserProfile> {
+  const res = await fetch(`${API_URL}/me`, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error("Impossible de charger le profil");
+  return res.json();
+}
+
+export async function updateProfile(
+  token: string,
+  data: Partial<Omit<UserProfile, "id" | "username">>
+): Promise<UserProfile> {
+  const cleaned = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== "")
+  );
+
+  const res = await fetch(`${API_URL}/me`, {
+    method: "PUT",
+    headers: {
+      ...authHeaders(token),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(cleaned),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to update profile");
+  }
+  return res.json();
+}
+
+export async function changePassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ message: string }> {
+  const res = await fetch(`${API_URL}/me/change-password`, {
+    method: "PUT",
+    headers: {
+      ...authHeaders(token),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to update password");
   }
   return res.json();
 }
