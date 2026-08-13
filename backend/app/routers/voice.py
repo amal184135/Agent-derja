@@ -197,17 +197,11 @@ async def voice_chat(
     session_id: str | None = Form(None),
     language: str = Form("arabic"),
 ):
-    """
-    Pipeline complet : audio entrant -> texte (STT) -> réponse LLM (derja) -> audio sortant (TTS).
-    Réutilise directement stt_engine, chat_service et tts_engine (mêmes objets que dans
-    stt.py / chat.py / tts.py), donc pas de duplication de logique.
-    """
     session_id = session_id or str(uuid.uuid4())
     audio_bytes = await file.read()
 
-    # --- 1. STT (identique à la logique de /stt/transcribe) ---
     try:
-        user_text = stt_engine.transcribe(audio_bytes, language=language)
+        user_text = await asyncio.to_thread(stt_engine.transcribe, audio_bytes, language)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=f"[STT] audio illisible: {exc}")
     except RuntimeError as exc:
@@ -216,32 +210,24 @@ async def voice_chat(
     if not user_text or not user_text.strip():
         raise HTTPException(status_code=400, detail="[STT] aucune parole détectée")
 
-    logger.info("[STT] session=%s texte=%s", session_id, user_text)
-
-    # --- 2. LLM (identique à la logique de /chat) ---
     try:
-        reply_text = chat_service.send_chat_message(session_id, user_text)
+        reply_text = await asyncio.to_thread(chat_service.send_chat_message, session_id, user_text)
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=f"[LLM] {exc}")
 
     if not reply_text or not reply_text.strip():
         raise HTTPException(status_code=500, detail="[LLM] réponse vide")
 
-    logger.info("[LLM] session=%s reponse=%s", session_id, reply_text)
-
-    # --- 3. TTS (identique à la logique de /tts) ---
     if not tts_engine.is_ready:
         raise HTTPException(status_code=503, detail="[TTS] modele en cours de chargement")
 
-    tts_language = STT_TO_TTS_LANGUAGE.get(language, "ar")  # "ar" par défaut, comme TTSRequest
+    tts_language = STT_TO_TTS_LANGUAGE.get(language, "ar")
 
     try:
-        response_audio = tts_engine.synthesize(reply_text, tts_language)
+        response_audio = await asyncio.to_thread(tts_engine.synthesize, reply_text, tts_language)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"[TTS] {exc}")
 
-    # NB: les headers HTTP doivent être en ASCII/latin-1 -> on encode le texte
-    # arabe avec quote() pour éviter un crash sur les caractères non-latin1.
     return Response(
         content=response_audio,
         media_type="audio/wav",

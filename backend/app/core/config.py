@@ -26,6 +26,11 @@ class Settings(BaseSettings):
 
     # --- Diacritization settings ---
     DIACRITICS_DICT_PATH: Path = BASE_DIR / "models_weights" / "tun_diacritics_dict_v2.json"
+    #XTTS_LEXICON_PATH: Path = BASE_DIR / "models_weights" / "xtts_v2" / "correction_lexicon_xtts.json"  # AJOUT
+
+    # --- Diacritization settings (ByT5) ---
+    BYT5_MODEL_DIR: Path = BASE_DIR / "models_weights" / "byt5_derja_model"
+    BYT5_DEVICE: str = "auto"  # "auto" | "cuda" | "cpu"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
