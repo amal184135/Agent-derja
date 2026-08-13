@@ -1,4 +1,4 @@
-from typing import Literal 
+from typing import Literal
 import base64
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from app.core.deps import get_current_username
 from app.services import chat_service, conversation_service
 from app.services.tts_service import engine as tts_engine  # AJOUT
-from app.services.diacritizer_service import diacritizer  # AJOUT
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -52,8 +51,7 @@ async def chat(req: ChatRequest, username: str = Depends(get_current_username)):
     if req.output_mode in ("audio", "both"):
         if not tts_engine.is_ready:
             raise HTTPException(status_code=503, detail="[TTS] modele en cours de chargement")
-        diacritized_reply = diacritizer.correct(reply)
-        audio_bytes = tts_engine.synthesize(diacritized_reply, "ar")
+        audio_bytes = tts_engine.synthesize(reply, "ar")  # MODIFIÉ — plus d'appel diacritizer.correct() ici, synthesize() le fait déjà en interne
         audio_base64 = base64.b64encode(audio_bytes).decode("ascii")
 
     return ChatResponse(reply=reply, session_id=session_id, audio_base64=audio_base64)
